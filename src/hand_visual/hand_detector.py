@@ -18,16 +18,20 @@ detector = vision.HandLandmarker.create_from_options(options)
 def draw_landmarks_on_image(rgb_image, detection_result):
     """Draws the landmarks and the connections on the image."""
     annotated_image = np.copy(rgb_image)
-
+    mp_drawing = mp.tasks.vision.drawing_utils
+    mp_drawing_styles = mp.tasks.vision.drawing_styles
+    mp_hands = mp.tasks.vision.HandLandmarksConnections
     # Loop through the detected hands
     if detection_result.hand_landmarks:
         for hand_landmarks in detection_result.hand_landmarks:
-            mp.solutions.drawing_utils.draw_landmarks(
+            mp_drawing.draw_landmarks(
                 annotated_image,
                 hand_landmarks,
-                mp.solutions.hands.HAND_CONNECTIONS,
-                mp.solutions.drawing_styles.get_default_hand_landmarks_style(),
-                mp.solutions.drawing_styles.get_default_hand_connections_style())
+                mp_hands.HAND_CONNECTIONS,
+                mp_drawing_styles.get_default_hand_landmarks_style(),
+                mp_drawing_styles.get_default_hand_connections_style()
+            )
+            
 
     return annotated_image
 
