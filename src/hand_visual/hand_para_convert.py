@@ -4,6 +4,8 @@ import numpy as np
 from pydantic import BaseModel, model_validator
 from enum import Enum
 import csv
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 
 
@@ -104,6 +106,14 @@ def load_finger_ind(fl:str='lib/fing_ind.csv')->list[FingerInd]:
         reader = csv.DictReader(f)
         return [FingerInd.model_validate(row) for row in reader]
 
+@dataclass
+class JointConfigNew:
+    """Configuration for a joint including limits"""
+
+    min_angle: float = 0.0
+    max_angle: float = 90.0  # Default for most joints
+    tar_angle: Optional[float] = None
+
 class FingerConvert:
     def __init__(self, landmark_data:list):
         self.wrist_ind = 0
@@ -175,8 +185,48 @@ class FingerConvert:
         this is to calculate the angle of the thumb rotate
         the logic is: to calculate the th_mcp to ff_mcp vs ff_mcp to mf_mcp
         '''
-        pass
+        th_inf = [i for i in self.finger_ind_ls if i.f_name == 'th'][0]
+        ff_inf = [i for i in self.finger_ind_ls if i.f_name == 'ff'][0]
+        mf_inf = [i for i in self.finger_ind_ls if i.f_name == 'mf'][0]
         
+        # this is to get the three points for the thumb rotation
+        v1_p1 = [self.landmark[th_inf.mcp_ind].x, self.landmark[th_inf.mcp_ind].y, self.landmark[th_inf.mcp_ind].z]
+        v1_p2 = [self.landmark[ff_inf.mcp_ind].x, self.landmark[ff_inf.mcp_ind].y, self.landmark[ff_inf.mcp_ind].z]
+        v1_p3 = [self.landmark[mf_inf.mcp_ind].x, self.landmark[mf_inf.mcp_ind].y, self.landmark[mf_inf.mcp_ind].z]
+
+        return calculate_angle(v1_p1, v1_p2, v1_p3)
+    
+    def update_joint_configs(self):
+
+        new_joint_conf = {
+            "th_rot": JointConfigNew(max_angle=150.0),  # Thumb rotation has extended range
+            "th_mcp": JointConfigNew(),  # Default 0-90 / # 拇指掌指关节弯曲（0-90度）
+            "th_dip": JointConfigNew(),  # 拇指远端关节弯曲
+            "ff_spr": JointConfigNew(max_angle=30.0),  # Finger spread is limited
+            "ff_mcp": JointConfigNew(),
+            "ff_dip": JointConfigNew(),
+            "mf_mcp": JointConfigNew(),
+            "mf_dip": JointConfigNew(),
+            "rf_mcp": JointConfigNew(),
+            "rf_dip": JointConfigNew(),
+            "lf_mcp": JointConfigNew(),
+            "lf_dip": JointConfigNew(),
+        }
+        
+        for i, v in new_joint_conf.items():
+            if 'rot' in i:
+                v.tar_angle = self._get_th_rot()
+            elif 'spr' in i:
+                v.tar_angle = self._get_finger_spr()
+            elif 'mcp' in i:
+                v.tar_angle = self._get_dexhand_mcp(i[:2])
+            elif 'dip' in i:
+                v.tar_angle = self._get_dexhand_dip(i[:2])
+            else: 
+                print (f'something wrong with the key, which is {i}')
+        
+        return new_joint_conf
+
 
 
 if __name__ == '__main__':
