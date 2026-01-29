@@ -15,6 +15,9 @@ options = vision.HandLandmarkerOptions(base_options=base_options,
                                        num_hands=2)
 detector = vision.HandLandmarker.create_from_options(options)
 
+import time
+
+
 def draw_landmarks_on_image(rgb_image, detection_result):
     """Draws the landmarks and the connections on the image."""
     annotated_image = np.copy(rgb_image)
@@ -35,6 +38,17 @@ def draw_landmarks_on_image(rgb_image, detection_result):
 
     return annotated_image
 
+def calculate_landmark_distance(landmarks1, landmarks2):
+    """Calculates the Euclidean distance between two sets of landmarks."""
+    if not landmarks1 or not landmarks2 or len(landmarks1) != len(landmarks2):
+        return float('inf')
+
+    total_distance = 0
+    for lm1, lm2 in zip(landmarks1, landmarks2):
+        total_distance += np.sqrt((lm1.x - lm2.x)**2 + (lm1.y - lm2.y)**2 + (lm1.z - lm2.z)**2)
+    
+    return total_distance / len(landmarks1)
+
 def main():
     # STEP 2: Open the camera.
     cap = cv2.VideoCapture(0)
@@ -46,6 +60,12 @@ def main():
     print("Camera opened successfully. Press 'q' to quit.")
 
     timestamp = 0
+    
+    last_landmarks = None
+    hand_stopped_start_time = None
+    robot_action_taken = False
+    MOVEMENT_THRESHOLD = 0.02 # This might need tuning
+
     while True:
         # STEP 3: Read a frame from the camera.
         success, img = cap.read()
@@ -62,6 +82,32 @@ def main():
         # STEP 4: Detect hand landmarks from the input image.
         timestamp += 1
         detection_result = detector.detect_for_video(mp_image, timestamp)
+
+        current_landmarks = None
+        if detection_result.hand_landmarks:
+            # For simplicity, we are using the first detected hand
+            current_landmarks = detection_result.hand_landmarks[0]
+
+        if current_landmarks and last_landmarks:
+            distance = calculate_landmark_distance(current_landmarks, last_landmarks)
+            
+            if distance < MOVEMENT_THRESHOLD:
+                if hand_stopped_start_time is None:
+                    hand_stopped_start_time = time.time()
+                
+                if not robot_action_taken and (time.time() - hand_stopped_start_time) >= 3.0:
+                    print("Hand stable for 3 seconds. Triggering robot action.")
+                    robot_action_taken = True # Mark that action has been taken for this stable position
+                    # Here you would transfer the hand landmark to the robot hand parameter.
+            else: # Hand moved
+                hand_stopped_start_time = None
+                robot_action_taken = False
+        elif not current_landmarks:
+            # No hand detected
+            hand_stopped_start_time = None
+            robot_action_taken = False
+
+        last_landmarks = current_landmarks
 
         # STEP 5: Process the detection result. In this case, visualize it.
         if detection_result:
