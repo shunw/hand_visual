@@ -23,7 +23,7 @@ from pyzlg_dexhand import JointCommand
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from hand_detector_static import StaticHandDetect
+
 from hand_para_convert import FingerConvert
 
 
@@ -145,8 +145,7 @@ class DexHandTester:
             "simultaneous": [],
             "consecutive": {"commands": [], "feedback": []},
         }
-
-        
+  
     def _collect_steady_state(self, target_angles: Dict[str, float], settling_time: Optional[float] = None) -> List[HandFeedback]:
         """Collect multiple feedback samples after settling
 
@@ -333,155 +332,6 @@ class DexHandTester:
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
 
-
-def main(img:str='hand2.png'):
-    parser = argparse.ArgumentParser(description="Test dexterous hand control")
-    parser.add_argument(
-        "--hands",
-        nargs="+",
-        choices=["left", "right"],
-        default=["left"],
-        help="Which hands to test",
-    )
-    parser.add_argument(
-        "--log-dir", type=str, default="dexhand_logs", help="Directory for test logs"
-    )
-    parser.add_argument(
-        "--settling-time",
-        type=float,
-        default=1.0,
-        help="Time to wait for settling (seconds)",
-    )
-    parser.add_argument(
-        "--n-samples",
-        type=int,
-        default=5,
-        help="Number of samples for steady-state analysis",
-    )
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-    args = parser.parse_args()
-
-    # Set logging level
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-
-    tester = None
-    try:
-        # Initialize and run tests
-        tester = DexHandTester(
-            args.hands, args.log_dir, args.settling_time, args.n_samples
-        )
-        
-        # # main steps
-        # get the target joints
-        s = StaticHandDetect()
-        s.get_detect_results(img)
-        s.draw_landmarks_on_image()
-        joints = s.get_hand_joints()
-        # print ()
-        # print (f"the thumb joint rotation is: {joints['th_rot']}")
-        # print ()
-
-        # connect the hand and pass the joints data to hands
-        
-        tester._test_reset()
-        time.sleep(.5)
-        
-        tester._single_move({name: config.tar_angle
-                for name, config in joints.items()})
-        time.sleep(.5)
-
-
-     
-    except KeyboardInterrupt:
-        logger.info("Test interrupted by user")
-
-    except Exception as e:
-        logger.error(f"Test failed: {str(e)}", exc_info=args.debug)
-
-    finally:
-        if tester is not None:
-            try:
-                tester.close()
-            except Exception as e:
-                logger.error(f"Error during cleanup: {str(e)}", exc_info=args.debug)
-        logger.info("Test completed")
-
-
-def main_ls(img_ls:list[str]):
-
-    parser = argparse.ArgumentParser(description="Test dexterous hand control")
-    parser.add_argument(
-        "--hands",
-        nargs="+",
-        choices=["left", "right"],
-        default=["left"],
-        help="Which hands to test",
-    )
-    parser.add_argument(
-        "--log-dir", type=str, default="dexhand_logs", help="Directory for test logs"
-    )
-    parser.add_argument(
-        "--settling-time",
-        type=float,
-        default=1.0,
-        help="Time to wait for settling (seconds)",
-    )
-    parser.add_argument(
-        "--n-samples",
-        type=int,
-        default=5,
-        help="Number of samples for steady-state analysis",
-    )
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-    args = parser.parse_args()
-
-    # Set logging level
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-
-    tester = None
-    try:
-        # Initialize and run tests
-        tester = DexHandTester(
-            args.hands, args.log_dir, args.settling_time, args.n_samples
-        )
-        
-        for img in img_ls:
-            # # main steps
-            # get the target joints
-            s = StaticHandDetect()
-            s.get_detect_results(img)
-            s.draw_landmarks_on_image()
-            joints = s.get_hand_joints()
-            # print ()
-            # print (f"the thumb joint rotation is: {joints['th_rot']}")
-            # print ()
-
-            # connect the hand and pass the joints data to hands
-            
-            tester._test_reset()
-            time.sleep(.5)
-            
-            tester._single_move({name: config.tar_angle
-                    for name, config in joints.items()})
-            time.sleep(.5)
-
-
-     
-    except KeyboardInterrupt:
-        logger.info("Test interrupted by user")
-
-    except Exception as e:
-        logger.error(f"Test failed: {str(e)}", exc_info=args.debug)
-
-    finally:
-        if tester is not None:
-            try:
-                tester.close()
-            except Exception as e:
-                logger.error(f"Error during cleanup: {str(e)}", exc_info=args.debug)
-        logger.info("Test completed")
   
 class MimicForLive():
     def __init__(self):

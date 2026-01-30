@@ -4,10 +4,13 @@
 
 ## step 2: to convert the hand marker into the parameter of robot hand
 
-## for the photo, you can run with the hand_detector_static
+## Usage
+- for the photo, you can run with the hand_detector_static.py, but currently only the 1st found hand can be mimic. 
+- for the video, you can run with the hand_detector.py, but there might be some issue. (have no time to fix it. )
+- the hand_visualn should be put in the pyzlg_dexhand folder, because we need the pyzlg_dexhand(link below) to handle the hand
 
 # configure: 
-1. hardware: dexhand, and below is the code for that hand
+1. hardware: dexhand 021 MP, and below is the code for that hand
 https://gitee.com/dexrobot/pyzlg_dexhand
 
 2. software: 
@@ -26,3 +29,8 @@ https://gitee.com/dexrobot/pyzlg_dexhand
 
 4. demo video with this hand for reference: (hope you can see it, cross fingers)
 https://www.bilibili.com/video/BV1Sv6vB2EzW/
+
+# to be optimized (later if there is any chance)
+
+- the hand shape convertion still have space to be optimized
+- the number of the hand can be mimic either in a photo or in a video

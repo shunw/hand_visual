@@ -1,4 +1,5 @@
 #@markdown We implemented some functions to visualize the hand landmark detection results. <br/> Run the following cell to activate the functions.
+# this program is only for the 1st detected hand in one photo, and only right hand
 import numpy as np
 
 # STEP 1: Import the necessary modules.
@@ -6,6 +7,7 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import cv2
+from hand_mimic import main_live, MimicForLive
 
 mp_hands = mp.tasks.vision.HandLandmarksConnections
 mp_drawing = mp.tasks.vision.drawing_utils
@@ -69,21 +71,23 @@ class StaticHandDetect:
         cv2.imshow("Hand Landmark Detector", annotated_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+        
 
     def get_hand_joints(self):
-        hand_landmarks_list = self.detection_result.hand_landmarks
+        hand_landmarks_list = self.detection_result.hand_landmarks[0]
         
-        # Loop through the detected hands to visualize.
-        for idx in range(len(hand_landmarks_list)): # idx should be how many hands be detected
-            hand_landmarks = hand_landmarks_list[idx] # shows the 21 hand mark at once 
-            # STEP 6: check the para convert
-            f = FingerConvert(hand_landmarks)
-            updated_joints = f.update_joint_configs()
-        return updated_joints
+        return hand_landmarks_list
         
 
 if __name__ == '__main__':
     s = StaticHandDetect()
     s.get_detect_results(img = 'hand2.png')
     s.draw_landmarks_on_image()
-    s.get_hand_joints()
+    # print (s.get_hand_joints())
+
+    hand = MimicForLive()
+    hand._hand_init_()
+    try:
+        hand.run(s.get_hand_joints())
+    finally:
+        hand._hand_close()
