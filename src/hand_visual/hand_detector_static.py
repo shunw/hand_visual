@@ -28,7 +28,7 @@ class StaticHandDetect:
     def get_detect_results(self, img:str='hand2.png'):
         # STEP 3: Load the input image.
         # IMPORTANT: Replace 'hand.png' with the actual path to your hand image.
-        img = 'hand2.png'
+        # img = 'hand2.png'
         self.rgb_image = mp.Image.create_from_file(img)
 
         # STEP 4: Detect hand landmarks from the input image.
@@ -79,7 +79,7 @@ class StaticHandDetect:
             # STEP 6: check the para convert
             f = FingerConvert(hand_landmarks)
             updated_joints = f.update_joint_configs()
-        print (updated_joints)
+        return updated_joints
         
 
 if __name__ == '__main__':

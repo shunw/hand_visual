@@ -120,7 +120,7 @@ class FingerConvert:
         self.finger_ind_ls = load_finger_ind()
         self.landmark = landmark_data
 
-    def _get_dexhand_mcp(self, finger:str):
+    def _get_dexhand_dip(self, finger:str):
         '''this is for how curl the finger is
         - mcp? to dexhand, this means how curl finger is
             - the simple way would be the angle of mcp to pip vs pip to dip
@@ -136,7 +136,7 @@ class FingerConvert:
         # 2. Calculate the angle
         return calculate_angle_supple(pt3, pt2, pt1)
 
-    def _get_dexhand_dip(self, finger:str):
+    def _get_dexhand_mcp(self, finger:str):
         '''this is for the angle between the finger vs palm
             dip? to dexhand, this means the whole finger 斜度, this is all the finger mcp (5, 9, 13, 17) to wrist (0), vs the mcp to pip (6, 10, 14, 18) angles
         finger: int - which finger, choose from th/ ff/ mf/ rf/ lf
@@ -186,15 +186,19 @@ class FingerConvert:
         the logic is: to calculate the th_mcp to ff_mcp vs ff_mcp to mf_mcp
         '''
         th_inf = [i for i in self.finger_ind_ls if i.f_name == 'th'][0]
-        ff_inf = [i for i in self.finger_ind_ls if i.f_name == 'ff'][0]
-        mf_inf = [i for i in self.finger_ind_ls if i.f_name == 'mf'][0]
+        # ff_inf = [i for i in self.finger_ind_ls if i.f_name == 'ff'][0]
+        # mf_inf = [i for i in self.finger_ind_ls if i.f_name == 'mf'][0]
         
         # this is to get the three points for the thumb rotation
         v1_p1 = [self.landmark[th_inf.mcp_ind].x, self.landmark[th_inf.mcp_ind].y, self.landmark[th_inf.mcp_ind].z]
-        v1_p2 = [self.landmark[ff_inf.mcp_ind].x, self.landmark[ff_inf.mcp_ind].y, self.landmark[ff_inf.mcp_ind].z]
-        v1_p3 = [self.landmark[mf_inf.mcp_ind].x, self.landmark[mf_inf.mcp_ind].y, self.landmark[mf_inf.mcp_ind].z]
+        # v1_p2 = [self.landmark[ff_inf.mcp_ind].x, self.landmark[ff_inf.mcp_ind].y, self.landmark[ff_inf.mcp_ind].z]
+        # v1_p3 = [self.landmark[mf_inf.mcp_ind].x, self.landmark[mf_inf.mcp_ind].y, self.landmark[mf_inf.mcp_ind].z]
 
-        return calculate_angle(v1_p1, v1_p2, v1_p3)
+        v1_p2 = [self.landmark[th_inf.pip_ind].x, self.landmark[th_inf.pip_ind].y, self.landmark[th_inf.pip_ind].z]
+        v1_p3 = [self.landmark[th_inf.dip_ind].x, self.landmark[th_inf.dip_ind].y, self.landmark[th_inf.dip_ind].z]
+
+
+        return max(calculate_angle_supple(v1_p1, v1_p2, v1_p3), 0)
     
     def update_joint_configs(self):
 
